@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from fastapi.responses import FileResponse
 from fastapi.security.api_key import APIKey
 from starlette.background import BackgroundTask
+from starlette.concurrency import run_in_threadpool
 from typing_extensions import Annotated
 
 from .auth import get_api_key
@@ -44,12 +45,13 @@ async def modify_dbfs(
         )
 
     try:
-        audio_modifier = AudioModifier(
+        audio_modifier = await run_in_threadpool(
+            AudioModifier,
             audio=upload_file.file,
             file_name=file_name_,
         )
-        audio_modifier.change_dbfs(target)
-        tmp_file = audio_modifier.export()
+        await run_in_threadpool(audio_modifier.change_dbfs, target)
+        tmp_file = await run_in_threadpool(audio_modifier.export)
     except BaseFileException as e:
         await logger.aexception(str(e), **e.metadata, exc_info=e)
         raise HTTPException(

@@ -6,12 +6,11 @@ from config.logging import LOGGING, configure_structlog_logger
 from config.settings import settings
 from fastapi import FastAPI, status
 
-app = FastAPI(debug=settings.DEBUG)
-
 logging.basicConfig(level=logging.getLevelName(settings.LOGGING_LEVEL))
 config.dictConfig(LOGGING)
 configure_structlog_logger()
 
+app = FastAPI(debug=settings.DEBUG)
 app.include_router(router)
 
 
